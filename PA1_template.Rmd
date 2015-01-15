@@ -26,6 +26,11 @@ tot.steps.day <- tapply(data$steps, data$date, sum)
 hist(tot.steps.day, main = "Histogram of Total Steps by Day", xlab = "Steps by Day")
 ```
 
+2. Calculate and report the **mean** and **median** total number of steps taken per day
+```{r mean_median, echo=TRUE}
+mean(tot.steps.day, na.rm = TRUE)
+median(tot.steps.day,na.rm = TRUE)
+```
 
 ## What is the average daily activity pattern?
 

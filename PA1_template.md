@@ -26,6 +26,23 @@ hist(tot.steps.day, main = "Histogram of Total Steps by Day", xlab = "Steps by D
 
 ![](./PA1_template_files/figure-html/totalStepsDay-1.png) 
 
+2. Calculate and report the **mean** and **median** total number of steps taken per day
+
+```r
+mean(tot.steps.day, na.rm = TRUE)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
+median(tot.steps.day,na.rm = TRUE)
+```
+
+```
+## [1] 10765
+```
 
 ## What is the average daily activity pattern?
 
