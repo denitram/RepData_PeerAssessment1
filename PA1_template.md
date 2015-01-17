@@ -75,7 +75,7 @@ avg.steps.by.interval <-
 plot(avg.steps.by.interval, type="l", main = "Average dayly activity", xlab = "Interval", ylab = "Average steps")
 ```
 
-![](./PA1_template_files/figure-html/unnamed-chunk-1-1.png) 
+![](./PA1_template_files/figure-html/avg_steps_by_interval-1.png) 
 
 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
