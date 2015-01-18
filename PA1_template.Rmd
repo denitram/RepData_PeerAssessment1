@@ -23,7 +23,9 @@ For this part of the assignment, you can ignore the missing values in the datase
 *1 Make a histogram of the total number of steps taken each day.*
 ```{r totalStepsDay1, echo=TRUE}
 tot.steps.day <- tapply(data$steps, data$date, sum)
-hist(tot.steps.day, main = "Histogram of Total Steps by Day", xlab = "Steps by Day")
+hist(tot.steps.day, 
+     main = "Histogram of Total Steps by Day",
+     xlab = "Steps by Day")
 ```
 
 *2 Calculate and report the **mean** and **median** total number of steps taken per day.*
@@ -44,7 +46,10 @@ avg.steps.by.interval <-
         group_by(interval) %>%
         summarize(avg_steps = mean(steps, na.rm = TRUE))
 
-plot(avg.steps.by.interval, type="l", main = "Average dayly activity", xlab = "Interval", ylab = "Average steps")
+plot(avg.steps.by.interval, type="l", 
+     main = "Average dayly activity", 
+     xlab = "Interval", 
+     ylab = "Average steps")
 ```
 
 *2 Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?*
@@ -60,7 +65,7 @@ The above calculation shows that interval ``r interval.with.max.steps`` contains
 Note that there are a number of days/intervals where there are missing values (coded as `NA`). The presence of missing days may introduce bias into some calculations or summaries of the data.
 
 *1 Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with `NA`s)*
-```{r}
+```{r, echo=TRUE}
 totalNA <- sum(is.na(data$steps))
 ```
 Total missing values in dataset: ``r totalNA``
@@ -73,16 +78,19 @@ I then use the **left_join** from `dplyr` to merge the original dataset with `av
 
 *3 Create a new dataset that is equal to the original dataset but with the missing data filled in.*  
 Implementation of the above strategy
-```{r}
+```{r,echo=TRUE}
 imputedData <- data %>%
         left_join(avg.steps.by.interval, by = "interval") %>%
-        mutate(steps = ifelse(is.na(steps), round(avg_steps), steps))
+        mutate(steps = ifelse(is.na(steps), round(avg_steps), steps)) %>%
+        select(steps, date, interval)
 ```
 
 *4 Make a histogram of the total number of steps taken each day and Calculate and report the **mean** and **median** total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?*
 ```{r totalStepsDay2, echo=TRUE}
 tot.steps.day.imputed <- tapply(imputedData$steps, imputedData$date, sum)
-hist(tot.steps.day.imputed, main = "Histogram of Total Steps by Day (imputed data)", xlab = "Steps by Day")
+hist(tot.steps.day.imputed, 
+     main = "Histogram of Total Steps by Day (imputed data)", 
+     xlab = "Steps by Day")
 ```
 
 ```{r mean_median2, echo=TRUE}
@@ -92,4 +100,44 @@ median(tot.steps.day.imputed, na.rm = TRUE)
 
 The imputed missing data has almost no impact on the mean and the median. The histogram shows a higher frequency for the steps between 10000 and 15000.
 
-## Are there differences in activity patterns between weekdays and weekends?
+## Are there differences in activity patterns between weekdays and weekends?  
+For this part the `weekdays()` function may be of some help here. Use the dataset with the filled-in missing values for this part.  
+
+*1 Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.*
+```{r, echo=TRUE}
+Sys.setlocale(category="LC_TIME", locale="en_US.UTF-8")
+data.day.type <- imputedData %>%
+        mutate(day_type = as.factor(ifelse(weekdays(date) == "Saturday" | weekdays(date) == "Sunday" , "weekend", "weekday" )))
+```
+
+*2 Make a panel plot containing a time series plot (i.e. `type = "l"`) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.*
+```{r weekday_weekend_hist, echo=TRUE }
+## Prepare the data for plotting
+# Weekdays
+data.weekday <- 
+        data.day.type %>%
+        filter(day_type == "weekday") %>%
+        group_by(interval) %>%
+        summarize(avg_steps = mean(steps))%>%
+        mutate(day_type = "weekday")
+
+# Weekends
+data.weekend <- 
+        data.day.type %>%
+        filter(day_type == "weekend") %>%
+        group_by(interval) %>%
+        summarize(avg_steps = mean(steps))%>%
+        mutate(day_type = "weekend")
+
+# Merge the both data frames for plotting with the lattice package
+data.merged <-
+        data.weekday %>%
+        full_join(data.weekend)
+
+# Lattice plot
+library(lattice)
+
+xyplot(avg_steps ~ interval | day_type, data=data.merged, layout=c(1,2), type = "l", ylab = " Number of steps")
+```
+
+

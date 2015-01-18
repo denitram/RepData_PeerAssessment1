@@ -21,7 +21,9 @@ For this part of the assignment, you can ignore the missing values in the datase
 
 ```r
 tot.steps.day <- tapply(data$steps, data$date, sum)
-hist(tot.steps.day, main = "Histogram of Total Steps by Day", xlab = "Steps by Day")
+hist(tot.steps.day, 
+     main = "Histogram of Total Steps by Day",
+     xlab = "Steps by Day")
 ```
 
 ![](PA1_template_files/figure-html/totalStepsDay1-1.png) 
@@ -76,7 +78,10 @@ avg.steps.by.interval <-
         group_by(interval) %>%
         summarize(avg_steps = mean(steps, na.rm = TRUE))
 
-plot(avg.steps.by.interval, type="l", main = "Average dayly activity", xlab = "Interval", ylab = "Average steps")
+plot(avg.steps.by.interval, type="l", 
+     main = "Average dayly activity", 
+     xlab = "Interval", 
+     ylab = "Average steps")
 ```
 
 ![](PA1_template_files/figure-html/avg_steps_by_interval-1.png) 
@@ -117,14 +122,17 @@ Implementation of the above strategy
 ```r
 imputedData <- data %>%
         left_join(avg.steps.by.interval, by = "interval") %>%
-        mutate(steps = ifelse(is.na(steps), round(avg_steps), steps))
+        mutate(steps = ifelse(is.na(steps), round(avg_steps), steps)) %>%
+        select(steps, date, interval)
 ```
 
 *4 Make a histogram of the total number of steps taken each day and Calculate and report the **mean** and **median** total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?*
 
 ```r
 tot.steps.day.imputed <- tapply(imputedData$steps, imputedData$date, sum)
-hist(tot.steps.day.imputed, main = "Histogram of Total Steps by Day (imputed data)", xlab = "Steps by Day")
+hist(tot.steps.day.imputed, 
+     main = "Histogram of Total Steps by Day (imputed data)", 
+     xlab = "Steps by Day")
 ```
 
 ![](PA1_template_files/figure-html/totalStepsDay2-1.png) 
@@ -148,4 +156,61 @@ median(tot.steps.day.imputed, na.rm = TRUE)
 
 The imputed missing data has almost no impact on the mean and the median. The histogram shows a higher frequency for the steps between 10000 and 15000.
 
-## Are there differences in activity patterns between weekdays and weekends?
+## Are there differences in activity patterns between weekdays and weekends?  
+For this part the `weekdays()` function may be of some help here. Use the dataset with the filled-in missing values for this part.  
+
+*1 Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.*
+
+```r
+Sys.setlocale(category="LC_TIME", locale="en_US.UTF-8")
+```
+
+```
+## [1] "en_US.UTF-8"
+```
+
+```r
+data.day.type <- imputedData %>%
+        mutate(day_type = as.factor(ifelse(weekdays(date) == "Saturday" | weekdays(date) == "Sunday" , "weekend", "weekday" )))
+```
+
+*2 Make a panel plot containing a time series plot (i.e. `type = "l"`) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.*
+
+```r
+## Prepare the data for plotting
+# Weekdays
+data.weekday <- 
+        data.day.type %>%
+        filter(day_type == "weekday") %>%
+        group_by(interval) %>%
+        summarize(avg_steps = mean(steps))%>%
+        mutate(day_type = "weekday")
+
+# Weekends
+data.weekend <- 
+        data.day.type %>%
+        filter(day_type == "weekend") %>%
+        group_by(interval) %>%
+        summarize(avg_steps = mean(steps))%>%
+        mutate(day_type = "weekend")
+
+# Merge the both data frames for plotting with the lattice package
+data.merged <-
+        data.weekday %>%
+        full_join(data.weekend)
+```
+
+```
+## Joining by: c("interval", "avg_steps", "day_type")
+```
+
+```r
+# Lattice plot
+library(lattice)
+
+xyplot(avg_steps ~ interval | day_type, data=data.merged, layout=c(1,2), type = "l", ylab = " Number of steps")
+```
+
+![](PA1_template_files/figure-html/weekday_weekend_hist-1.png) 
+
+
